@@ -1,0 +1,32 @@
+:root {
+  color-scheme: light;
+  --papel: #FAF8F3; --tinta: #15171A; --tinta2: #5B6068; --regla: #D9D4C8; --rojo: #D7263D; --suave: #F1EDE3;
+}
+* { box-sizing: border-box; }
+html { font-size: 20px; }
+body { margin: 0; min-height: 100vh; background: var(--papel); color: var(--tinta); font-family: "Noto Sans", system-ui, sans-serif; line-height: 1.45; }
+.contenedor { width: min(1240px, calc(100% - 48px)); margin: 0 auto; padding-bottom: 48px; }
+.aviso { display: flex; gap: 12px; align-items: center; margin: 20px 0 8px; padding: 10px 16px; background: var(--suave); border-left: 6px solid var(--rojo); font-weight: 700; font-size: .85rem; }
+.cabecera { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px; margin: 14px 0 18px; }
+.titulo { margin: 0; font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900; line-height: 1.05; letter-spacing: -.01em; }
+.titulo em { font-style: normal; color: var(--rojo); }
+.sub { margin: 4px 0 0; color: var(--tinta2); max-width: 44rem; }
+.etiqueta { display: inline-block; font-size: .7rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--tinta2); }
+.etiqueta.rojo { color: var(--rojo); }
+.panel { background: var(--suave); padding: 20px 22px; }
+.fila { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+.acciones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.boton { font: inherit; font-weight: 800; font-size: .9rem; padding: 10px 16px; border: 2px solid var(--tinta); background: var(--tinta); color: var(--papel); cursor: pointer; }
+.boton.rojo { background: var(--rojo); border-color: var(--rojo); }
+.boton.fantasma { background: transparent; color: var(--tinta); }
+.boton:disabled { opacity: .35; cursor: not-allowed; }
+.boton:focus-visible, .opcion:focus-visible { outline: 3px solid var(--rojo); outline-offset: 3px; }
+.grande { font-size: 2.4rem; font-weight: 900; line-height: 1; }
+.mono { font-family: "Noto Sans Mono", ui-monospace, monospace; font-size: .85rem; white-space: pre-wrap; background: #fff; border: 1px solid var(--regla); padding: 14px; margin: 0; }
+.oculto { display: none !important; }
+.ok { color: #1F6F3F; font-weight: 800; }
+.mal { color: var(--rojo); font-weight: 800; }
+#estado { min-height: 1.6em; margin: 12px 0 0; font-weight: 700; }
+hr { border: 0; border-top: 1px solid var(--regla); margin: 18px 0; }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }

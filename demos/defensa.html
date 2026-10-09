@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tres fichas · Ciberdelito 3.0</title>
+<link rel="stylesheet" href="comun.css">
+<style>
+  .controles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .opcion { font: inherit; text-align: left; padding: 12px 14px; background: #fff; border: 2px solid var(--regla); cursor: pointer; }
+  .opcion strong { display: block; }
+  .opcion span { color: var(--tinta2); font-size: .85rem; }
+  .opcion[aria-pressed="true"] { border-color: var(--tinta); background: var(--tinta); color: var(--papel); }
+  .opcion[aria-pressed="true"] span { color: var(--regla); }
+  .opcion:disabled { opacity: .4; cursor: not-allowed; }
+  table { border-collapse: collapse; width: 100%; margin-top: 10px; font-size: .9rem; }
+  th, td { border: 1px solid var(--regla); padding: 8px 6px; text-align: center; }
+  th { background: #fff; font-weight: 800; }
+  th:first-child, td:first-child { text-align: left; }
+  td.cubre { background: #fff; color: #1F6F3F; font-weight: 900; }
+  td.falta { background: #FFE3E7; color: var(--rojo); font-weight: 900; }
+  .ternas { display: grid; gap: 8px; margin-top: 10px; }
+  .terna { background: #fff; border: 1px solid var(--regla); padding: 8px 12px; display: flex; justify-content: space-between; font-size: .9rem; }
+  .terna b { color: var(--rojo); }
+</style>
+</head>
+<body data-demo="defensa">
+<div class="contenedor">
+  <div class="aviso">Simulación local con datos ficticios · Modelo simplificado con fines didácticos</div>
+  <header class="cabecera">
+    <div><h1 class="titulo">Tienes <em>3 fichas</em> para defender el campus</h1><p class="sub">Elige exactamente tres controles. La matriz muestra qué fases de la cadena quedan sin cubrir.</p></div>
+  </header>
+  <div class="fila">
+    <section class="panel">
+      <span class="etiqueta">Controles</span>
+      <div class="controles" id="controles" role="group" aria-label="Controles">
+        <button class="opcion" aria-pressed="false" data-c="mfa"><strong>A · MFA / passkeys</strong><span>protege identidad</span></button>
+        <button class="opcion" aria-pressed="false" data-c="parches"><strong>B · Parches</strong><span>reduce exposición</span></button>
+        <button class="opcion" aria-pressed="false" data-c="copias"><strong>C · Copias inmutables</strong><span>permite recuperar</span></button>
+        <button class="opcion" aria-pressed="false" data-c="segmentacion"><strong>D · Segmentación</strong><span>limita movimiento</span></button>
+        <button class="opcion" aria-pressed="false" data-c="monitorizacion"><strong>E · Monitorización</strong><span>descubre señales</span></button>
+        <button class="opcion" aria-pressed="false" data-c="simulacros"><strong>F · Simulacros</strong><span>coordina personas</span></button>
+      </div>
+      <div class="acciones">
+        <button class="boton" id="guardar" disabled>Guardar terna para comparar</button>
+        <button class="boton fantasma" id="reiniciar">Reiniciar</button>
+      </div>
+      <p id="estado" aria-live="polite"></p>
+      <div class="ternas" id="ternas"></div>
+    </section>
+    <aside class="panel">
+      <span class="etiqueta rojo">Matriz de cobertura</span>
+      <table id="matriz"><thead><tr><th>Fase</th><th>Prevenir</th><th>Detectar</th><th>Contener</th><th>Recuperar</th></tr></thead><tbody></tbody></table>
+      <p class="sub" style="margin-top:10px"><strong>Trampa:</strong> ninguna terna cubre todo. La pregunta es qué riesgo aceptas y por qué.</p>
+    </aside>
+  </div>
+</div>
+<script>
+"use strict";
+const FASES = ["Entrar", "Explorar", "Escalar", "Robar", "Dañar", "Presionar"];
+const CAPS = ["Prevenir", "Detectar", "Contener", "Recuperar"];
+// Modelo didáctico: qué capacidad aporta cada control en cada fase.
+const COBERTURA = {
+  mfa:            { Entrar: ["Prevenir"], Escalar: ["Prevenir"] },
+  parches:        { Entrar: ["Prevenir"], Explorar: ["Prevenir"] },
+  copias:         { Dañar: ["Recuperar"], Presionar: ["Recuperar"] },
+  segmentacion:   { Explorar: ["Contener"], Escalar: ["Contener"], Robar: ["Contener"], Dañar: ["Contener"] },
+  monitorizacion: { Entrar: ["Detectar"], Explorar: ["Detectar"], Escalar: ["Detectar"], Robar: ["Detectar"], Dañar: ["Detectar"] },
+  simulacros:     { Robar: ["Detectar"], Dañar: ["Contener"], Presionar: ["Contener"] }
+};
+// Celdas que «importan» en cada fase: las primeras necesitan prevenir o detectar; robar y dañar añaden contener; dañar y presionar exigen recuperar.
+const NECESARIO = { Entrar: ["Prevenir", "Detectar"], Explorar: ["Prevenir", "Detectar", "Contener"], Escalar: ["Prevenir", "Detectar", "Contener"], Robar: ["Detectar", "Contener"], Dañar: ["Detectar", "Contener", "Recuperar"], Presionar: ["Contener", "Recuperar"] };
+const NOMBRES = { mfa: "A", parches: "B", copias: "C", segmentacion: "D", monitorizacion: "E", simulacros: "F" };
+const opciones = [...document.querySelectorAll(".opcion")], tbody = document.querySelector("#matriz tbody");
+const estado = document.querySelector("#estado"), bGuardar = document.querySelector("#guardar"), ternas = document.querySelector("#ternas");
+let elegidos = [], guardadas = [];
+
+function cobertura(sel) {
+  const m = {}; FASES.forEach((f) => { m[f] = new Set(); });
+  sel.forEach((c) => Object.entries(COBERTURA[c]).forEach(([f, caps]) => caps.forEach((cap) => m[f].add(cap))));
+  return m;
+}
+function huecos(sel) {
+  const m = cobertura(sel); let n = 0;
+  FASES.forEach((f) => NECESARIO[f].forEach((cap) => { if (!m[f].has(cap)) n++; }));
+  return n;
+}
+function pintar() {
+  const m = cobertura(elegidos);
+  tbody.innerHTML = FASES.map((f) => `<tr><th>${f}</th>` + CAPS.map((cap) => {
+    const necesaria = NECESARIO[f].includes(cap), tiene = m[f].has(cap);
+    if (!necesaria) return `<td>·</td>`;
+    return `<td class="${tiene ? "cubre" : "falta"}">${tiene ? "✓" : "✗"}</td>`;
+  }).join("") + "</tr>").join("");
+  const completo = elegidos.length === 3;
+  opciones.forEach((o) => { const on = elegidos.includes(o.dataset.c); o.setAttribute("aria-pressed", String(on)); o.disabled = completo && !on; });
+  bGuardar.disabled = !completo || guardadas.length >= 3;
+  estado.textContent = completo ? `Terna ${elegidos.map((c) => NOMBRES[c]).join("+")}: ${huecos(elegidos)} huecos sin cubrir.` : `Elegidos ${elegidos.length} de 3.`;
+}
+opciones.forEach((o) => o.addEventListener("click", () => {
+  const c = o.dataset.c;
+  if (elegidos.includes(c)) elegidos = elegidos.filter((x) => x !== c);
+  else if (elegidos.length < 3) elegidos.push(c);
+  pintar();
+}));
+bGuardar.addEventListener("click", () => {
+  if (elegidos.length !== 3 || guardadas.length >= 3) return;
+  guardadas.push([...elegidos]);
+  ternas.innerHTML = guardadas.map((g) => `<div class="terna"><span>${g.map((c) => NOMBRES[c]).join(" + ")}</span><b>${huecos(g)} huecos</b></div>`).join("");
+  if (guardadas.length >= 3) bGuardar.disabled = true;
+});
+document.querySelector("#reiniciar").addEventListener("click", () => { elegidos = []; guardadas = []; ternas.innerHTML = ""; pintar(); });
+pintar();
+document.body.dataset.ready = "1";
+if (window.opener) { try { window.opener.postMessage({ demo: document.body.dataset.demo }, "*"); } catch (e) { /* sin índice abierto */ } }
+</script>
+</body>
+</html>

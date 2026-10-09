@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ciberdelito 3.0</title>
+<meta name="description" content="Material para asistentes de la charla Ciberdelito 3.0: guía de la sesión, cinco demos locales y la presentación.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,700;0,900;1,400&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --papel: #FAF8F3; --tinta: #15171A; --tinta2: #5B6068; --regla: #D9D4C8; --rojo: #D7263D; --suave: #F1EDE3;
+    --ancho: 1120px; --prosa: 66ch;
+  }
+  * { box-sizing: border-box; }
+  html { font-size: 19px; scroll-behavior: smooth; }
+  body { margin: 0; background: var(--papel); color: var(--tinta); font-family: "Noto Sans", system-ui, sans-serif; line-height: 1.5; }
+  a { color: inherit; }
+  a:focus-visible, button:focus-visible { outline: 3px solid var(--rojo); outline-offset: 3px; }
+  .contenedor { width: min(var(--ancho), calc(100% - 32px)); margin: 0 auto; }
+  p { max-width: var(--prosa); margin: 0 0 1em; }
+
+  /* Franja superior: lo mismo que ven en cada demo */
+  .aviso { background: var(--tinta); color: var(--papel); font-weight: 700; font-size: .85rem; padding: 10px 0; }
+  .aviso .contenedor { display: flex; flex-wrap: wrap; gap: 6px 24px; justify-content: space-between; }
+
+  /* Portada */
+  .portada { padding: 56px 0 32px; }
+  .portada h1 { margin: 0; font-size: clamp(3rem, 11vw, 7.6rem); font-weight: 900; line-height: .92; letter-spacing: -.035em; }
+  .portada h1 .v { color: var(--rojo); }
+  .portada .subtitulo { margin: 18px 0 0; font-size: clamp(1.2rem, 2.6vw, 1.75rem); font-weight: 700; line-height: 1.2; max-width: 30ch; letter-spacing: -.01em; }
+  .portada .quien { margin: 20px 0 0; color: var(--tinta2); max-width: 52ch; }
+  .portada .quien a { color: var(--tinta); font-weight: 700; text-decoration-color: var(--rojo); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+  .acciones { display: flex; flex-wrap: wrap; gap: 12px 14px; margin: 30px 0 0; align-items: center; }
+  .boton { display: inline-block; font: inherit; font-weight: 800; font-size: .95rem; padding: 13px 20px; border: 2px solid var(--tinta); background: var(--tinta); color: var(--papel); text-decoration: none; cursor: pointer; }
+  .boton.rojo { background: var(--rojo); border-color: var(--rojo); }
+  .boton.fantasma { background: transparent; color: var(--tinta); }
+  .boton:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+  .acciones small { color: var(--tinta2); font-size: .85rem; }
+
+  /* Línea de 37 años: el elemento memorable de la página */
+  .linea { margin: 56px 0 0; padding: 0 0 8px; }
+  .linea h2 { margin: 0 0 6px; font-size: 1rem; font-weight: 700; color: var(--tinta2); }
+  .hitos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, 1fr); position: relative; }
+  .hitos::before { content: ""; position: absolute; left: 0; right: 0; top: 2.35rem; border-top: 3px solid var(--tinta); }
+  .hitos li { position: relative; padding: 0 12px 0 0; }
+  .hitos .anio { display: block; font-weight: 900; font-size: 1.15rem; line-height: 1; height: 1.4rem; }
+  .hitos li::before { content: ""; display: block; width: 14px; height: 14px; margin: .55rem 0 .7rem; background: var(--papel); border: 3px solid var(--tinta); border-radius: 50%; }
+  .hitos li:last-child::before { background: var(--rojo); border-color: var(--rojo); }
+  .hitos li:last-child .anio { color: var(--rojo); }
+  .hitos strong { display: block; font-size: .9rem; line-height: 1.25; }
+  .hitos span { display: block; color: var(--tinta2); font-size: .82rem; line-height: 1.3; margin-top: 2px; }
+  .cambios { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 28px; margin: 28px 0 0; padding: 20px 0 0; border-top: 1px solid var(--regla); }
+  .cambios div { font-size: .95rem; color: var(--tinta2); }
+  .cambios b { display: block; color: var(--tinta); font-weight: 800; }
+
+  /* Secciones */
+  section { padding: 56px 0 0; }
+  section > h2 { margin: 0 0 18px; font-size: clamp(1.6rem, 3.4vw, 2.2rem); font-weight: 900; letter-spacing: -.02em; line-height: 1.1; }
+  .intro { font-size: 1.08rem; }
+
+  /* Guía: tramos de tiempo */
+  .tramos { list-style: none; margin: 8px 0 0; padding: 0; max-width: 860px; border-top: 1px solid var(--regla); }
+  .tramos li { display: grid; grid-template-columns: 7.2rem 1fr; gap: 0 24px; padding: 16px 0; border-bottom: 1px solid var(--regla); }
+  .tramos time { font-weight: 900; font-variant-numeric: tabular-nums; font-size: 1.05rem; line-height: 1.4; }
+  .tramos h3 { margin: 0 0 2px; font-size: 1.1rem; font-weight: 800; }
+  .tramos p { margin: 0; color: var(--tinta2); max-width: 60ch; }
+  .tramos li.demo-si h3::after { content: "con demo"; margin-left: 10px; font-size: .72rem; font-weight: 800; color: var(--rojo); border: 1.5px solid var(--rojo); padding: 1px 7px; vertical-align: middle; }
+
+  /* Tres ideas (así se cierra la charla) */
+  .ideas { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px 32px; }
+  .ideas li { border-top: 3px solid var(--tinta); padding-top: 12px; }
+  .ideas .n { display: block; font-size: 2.6rem; font-weight: 900; line-height: 1; color: var(--rojo); letter-spacing: -.03em; }
+  .ideas p { margin: 8px 0 0; font-size: 1.02rem; }
+  .ideas b { font-weight: 800; }
+  .pregunta { margin: 28px 0 0; font-size: 1.3rem; font-weight: 900; letter-spacing: -.01em; }
+
+  /* Demos */
+  .lista-demos { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .demo { display: grid; grid-template-columns: 2.4rem 1fr auto; gap: 0 16px; align-items: center; padding: 18px 20px; background: var(--suave); border-left: 6px solid var(--tinta); text-decoration: none; }
+  .demo:hover, .demo:focus-visible { border-left-color: var(--rojo); }
+  .demo .num { font-size: 1.6rem; font-weight: 900; line-height: 1; color: var(--tinta2); }
+  .demo strong { display: block; font-size: 1.15rem; line-height: 1.2; }
+  .demo span { color: var(--tinta2); font-size: .95rem; }
+  .demo em { font-style: normal; font-weight: 800; white-space: nowrap; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+  .nota-demos { margin: 18px 0 0; color: var(--tinta2); font-size: .95rem; }
+
+  /* Presentación y kit */
+  .dos { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px 40px; }
+  .pdf { background: #fff; border: 1px solid var(--regla); padding: 24px 26px; }
+  .pdf h3, .kit h3 { margin: 0 0 10px; font-size: 1.25rem; font-weight: 900; letter-spacing: -.01em; }
+  .pdf p { color: var(--tinta2); margin-bottom: 1em; }
+  .pdf .candado { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--tinta); }
+  .pdf .candado svg { flex: none; }
+  .kit ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+  .kit li { padding-left: 18px; position: relative; color: var(--tinta2); }
+  .kit li::before { content: ""; position: absolute; left: 0; top: .6em; width: 8px; height: 8px; background: var(--rojo); }
+  .kit li b { color: var(--tinta); font-weight: 800; }
+
+  /* Autor y pie */
+  .autor { margin-top: 64px; padding: 36px 0 44px; background: var(--suave); }
+  .autor .contenedor { display: grid; grid-template-columns: 1fr auto; gap: 18px 40px; align-items: center; }
+  .autor h2 { margin: 0 0 6px; font-size: 1.6rem; font-weight: 900; letter-spacing: -.02em; }
+  .autor p { margin: 0; color: var(--tinta2); }
+  footer { padding: 24px 0 40px; color: var(--tinta2); font-size: .88rem; }
+  footer a { color: var(--tinta); }
+
+  @media (max-width: 860px) {
+    .hitos { grid-template-columns: 1fr; gap: 14px; padding-left: 26px; }
+    .hitos::before { top: 0; bottom: 0; left: 6px; right: auto; border-top: 0; border-left: 3px solid var(--tinta); }
+    .hitos li { padding: 0; }
+    .hitos li::before { position: absolute; left: -26px; top: .15rem; margin: 0; }
+    .hitos .anio { height: auto; display: inline; margin-right: 8px; }
+    .hitos strong { display: inline; }
+    .cambios, .ideas { grid-template-columns: 1fr; }
+    .tramos li { grid-template-columns: 1fr; gap: 2px; }
+    .demo { grid-template-columns: 2rem 1fr; }
+    .demo em { grid-column: 2; margin-top: 8px; }
+    .autor .contenedor { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<div class="aviso"><div class="contenedor"><span>Todas las demos son simulaciones locales con datos ficticios.</span><span>Nada sale de tu navegador.</span></div></div>
+
+<header class="portada contenedor">
+  <h1>Ciberdelito <span class="v">3.0</span></h1>
+  <p class="subtitulo">Del virus artesanal al ataque aumentado por IA</p>
+  <p class="quien">Charla de 50 minutos de <a href="https://cafe.ual.es">José Antonio Álvarez Bermejo</a>, Universidad de Almería. Seminario Permanente: Seguridad Nacional, Seguridad Digital, Ciberdelitos. Edición 2026.</p>
+  <div class="acciones">
+    <a class="boton rojo" href="demos/index.html">Abrir las demos</a>
+    <a class="boton fantasma" href="main.pdf" download>Descargar la presentación</a>
+    <small>El PDF pide una contraseña. Se facilita durante la charla.</small>
+  </div>
+
+  <div class="linea" aria-labelledby="t-linea">
+    <h2 id="t-linea">Treinta y siete años en una sola línea</h2>
+    <ol class="hitos">
+      <li><span class="anio">1989</span><strong>AIDS Trojan</strong><span>disquete por correo postal</span></li>
+      <li><span class="anio">2000</span><strong>Gusanos masivos</strong><span>correo e Internet</span></li>
+      <li><span class="anio">2013</span><strong>CryptoLocker</strong><span>cifrado y bitcoin</span></li>
+      <li><span class="anio">2017</span><strong>WannaCry</strong><span>gusano y ransomware</span></li>
+      <li><span class="anio">2019</span><strong>Doble extorsión</strong><span>robar y cifrar</span></li>
+      <li><span class="anio">2020s</span><strong>RaaS</strong><span>servicios criminales</span></li>
+      <li><span class="anio">2025</span><strong>IA en ejecución</strong><span>modelos en el bucle</span></li>
+    </ol>
+    <div class="cambios">
+      <div><b>Alcance</b>De una máquina a una cadena de suministro.</div>
+      <div><b>Incentivo</b>De la notoriedad a ingresos recurrentes.</div>
+      <div><b>Automatización</b>De scripts fijos a decisiones adaptativas.</div>
+    </div>
+  </div>
+</header>
+
+<main class="contenedor">
+  <section aria-labelledby="t-guia">
+    <h2 id="t-guia">De qué va la charla</h2>
+    <p class="intro">Esta historia empieza con una pantalla bloqueada y termina con una decisión humana. No vamos a coleccionar sustos: vamos a distinguir hechos, prototipos y escenarios para tomar mejores decisiones. Ninguna demo usa malware real.</p>
+    <ol class="tramos">
+      <li><time>0 a 4 min</time><div><h3>Apertura</h3><p>Son las 08:07 y el campus deja de funcionar. Primera votación: con una sola acción para los próximos diez minutos, ¿pagar, apagarlo todo, restaurar la copia o aislar y activar la respuesta?</p></div></li>
+      <li><time>4 a 11 min</time><div><h3>Evolución</h3><p>Treinta y siete años en una línea y la «fábrica» del ciberdelito: cómo un pasatiempo de notoriedad se convirtió en un mercado de servicios con proveedores especializados.</p></div></li>
+      <li class="demo-si"><time>11 a 25 min</time><div><h3>Ransomware</h3><p>Copiar, bloquear y presionar. La nota de rescate es casi el final de la cadena, y por eso hay oportunidades de detección mucho antes. Vídeo, laboratorio de ransomware y la pregunta de si pagar, que está mal planteada.</p></div></li>
+      <li class="demo-si"><time>25 a 39 min</time><div><h3>IA y ciberdelito</h3><p>Qué cambia de verdad, qué es prototipo y qué es escenario. Phishing con voz sintética, malware polimórfico, código generado justo a tiempo, agentes y la IA como objetivo de ataque.</p></div></li>
+      <li class="demo-si"><time>39 a 46 min</time><div><h3>Defensa y cierre</h3><p>Tres fichas para defender el campus, qué hacer en los primeros minutos y un kit personal de baja fricción para esta semana.</p></div></li>
+      <li><time>46 a 50 min</time><div><h3>Preguntas</h3><p>Cuatro minutos para dos o tres preguntas breves.</p></div></li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="t-ideas">
+    <h2 id="t-ideas">Tres ideas para salir por la puerta</h2>
+    <ol class="ideas">
+      <li><span class="n">01</span><p>El ciberdelito se volvió una <b>industria de servicios</b>.</p></li>
+      <li><span class="n">02</span><p>El ransomware es una <b>campaña de presión</b>, no una pantalla.</p></li>
+      <li><span class="n">03</span><p>La IA aumenta el <b>tempo</b>; la evidencia decide el relato.</p></li>
+    </ol>
+    <p class="pregunta">¿Qué idea te ha hecho cambiar de opinión?</p>
+  </section>
+
+  <section aria-labelledby="t-demos">
+    <h2 id="t-demos">Las cinco demos</h2>
+    <p class="intro">Cada una se abre en una pestaña nueva y funciona sin conexión. Puedes repetirlas en casa o en clase.</p>
+    <ol class="lista-demos">
+      <li><a class="demo" href="demos/ransomware.html" target="_blank" rel="noopener"><span class="num">1</span><div><strong>Laboratorio de ransomware</strong><span>Un escritorio ficticio recorre las cinco fases de un incidente. Puedes aislar a tiempo y recuperar una copia.</span></div><em>Abrir</em></a></li>
+      <li><a class="demo" href="demos/phishing.html" target="_blank" rel="noopener"><span class="num">2</span><div><strong>¿Legítimo o fraude?</strong><span>Seis mensajes ficticios. Vota primero y después revela las pistas.</span></div><em>Abrir</em></a></li>
+      <li><a class="demo" href="demos/polimorfismo.html" target="_blank" rel="noopener"><span class="num">3</span><div><strong>Misma intención, otra apariencia</strong><span>El mismo pseudocódigo con otra forma: el hash cambia, la secuencia de acciones no.</span></div><em>Abrir</em></a></li>
+      <li><a class="demo" href="demos/inyeccion.html" target="_blank" rel="noopener"><span class="num">4</span><div><strong>La IA también es el objetivo</strong><span>Un agente simulado resume un documento que intenta darle órdenes, con y sin guardarraíles.</span></div><em>Abrir</em></a></li>
+      <li><a class="demo" href="demos/defensa.html" target="_blank" rel="noopener"><span class="num">5</span><div><strong>Tienes 3 fichas para defender el campus</strong><span>Elige exactamente tres controles y mira qué fases de la cadena quedan sin cubrir.</span></div><em>Abrir</em></a></li>
+    </ol>
+    <p class="nota-demos">Las demos no leen ni escriben archivos, no usan red ni almacenamiento. Solo cambia lo que ves en la pantalla.</p>
+  </section>
+
+  <section aria-labelledby="t-material">
+    <h2 id="t-material">Para llevarte</h2>
+    <div class="dos">
+      <div class="pdf">
+        <h3>La presentación</h3>
+        <p>Las 43 diapositivas de la charla en PDF, con los enlaces a las fuentes.</p>
+        <p class="candado"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Pide una contraseña al abrirse. Se facilita durante la charla.</p>
+        <a class="boton" href="main.pdf" download>Descargar el PDF</a>
+      </div>
+      <div class="kit">
+        <h3>Tu kit para esta semana</h3>
+        <ul>
+          <li><b>Passkeys o MFA</b> y una contraseña distinta por servicio.</li>
+          <li><b>Actualiza</b> sistema, navegador, aplicaciones y router.</li>
+          <li><b>Copia separada</b> y comprueba que se puede restaurar.</li>
+          <li><b>Verifica por otro canal</b>, incluso si la voz parece auténtica.</li>
+          <li><b>Comunica pronto</b>: el silencio regala tiempo al atacante.</li>
+          <li><b>Prueba tu criterio</b> con la demo de phishing.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="autor">
+  <div class="contenedor">
+    <div>
+      <h2>Quién da la charla</h2>
+      <p>José Antonio Álvarez Bermejo, Universidad de Almería.</p>
+    </div>
+    <a class="boton" href="https://cafe.ual.es">Conóceme en cafe.ual.es</a>
+  </div>
+</div>
+<footer class="contenedor">Página, demos y presentación en <a href="https://github.com/jaberme/ciberseguridad-3.0">github.com/jaberme/ciberseguridad-3.0</a>.</footer>
+</body>
+</html>

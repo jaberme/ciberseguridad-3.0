@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>¿Legítimo o fraude? · Ciberdelito 3.0</title>
+<link rel="stylesheet" href="comun.css">
+<style>
+  .mensaje { background: #fff; border: 1px solid var(--regla); padding: 18px 20px; font-size: 1.05rem; }
+  .mensaje .meta { color: var(--tinta2); font-size: .85rem; margin-bottom: 8px; }
+  .mensaje .cuerpo { white-space: pre-wrap; }
+  .pista { background: #FFE3E7; border-bottom: 3px solid var(--rojo); padding: 0 2px; }
+  .mensaje.revelado.legitimo { border-color: #1F6F3F; }
+  .mensaje.revelado.fraude { border-color: var(--rojo); }
+  .veredicto { font-size: 1.6rem; font-weight: 900; margin: 10px 0 0; }
+  .pistas li { margin: 4px 0; }
+  .progreso { color: var(--tinta2); font-weight: 800; }
+  .resumen { display: none; }
+  .resumen.visible { display: block; }
+</style>
+</head>
+<body data-demo="phishing">
+<div class="contenedor">
+  <div class="aviso">Simulación local con datos ficticios · Remitentes, dominios y teléfonos inventados</div>
+  <header class="cabecera">
+    <div><h1 class="titulo">¿Legítimo o <em>fraude</em>?</h1><p class="sub">La sala vota a mano alzada. Después pulsa «Revelar» y aparecen las pistas.</p></div>
+  </header>
+  <div class="fila">
+    <section class="panel">
+      <div class="progreso" id="progreso"></div>
+      <article class="mensaje" id="mensaje" aria-live="polite">
+        <div class="meta" id="meta"></div>
+        <div class="cuerpo" id="cuerpo"></div>
+        <div class="veredicto" id="veredicto"></div>
+      </article>
+      <div class="acciones">
+        <button class="boton rojo" id="revelar">Revelar</button>
+        <button class="boton" id="siguiente" disabled>Siguiente</button>
+        <button class="boton fantasma" id="reiniciar">Reiniciar</button>
+      </div>
+      <p id="estado" aria-live="polite"></p>
+    </section>
+    <aside class="panel">
+      <span class="etiqueta rojo">Pistas</span>
+      <ul class="pistas" id="pistas"><li class="sub">Se muestran al revelar.</li></ul>
+      <div class="resumen" id="resumen">
+        <hr>
+        <strong>Cinco pistas que se repiten</strong>
+        <ol>
+          <li>Remitente o dominio que casi coincide.</li>
+          <li>Urgencia o amenaza de consecuencias.</li>
+          <li>Enlace o adjunto que no esperabas.</li>
+          <li>Petición de datos, códigos o pagos.</li>
+          <li>Canal inesperado para ese asunto.</li>
+        </ol>
+        <p><strong>Consejo:</strong> verifica la petición por otro canal que ya conozcas.</p>
+      </div>
+    </aside>
+  </div>
+</div>
+<script>
+"use strict";
+// Cada mensaje: canal, meta, cuerpo, fraude (bool), pistas [{t: texto literal del cuerpo, m: motivo}].
+const MENSAJES = [
+  { canal: "Correo", meta: "De: secretaria@campus-ejemplo.edu · Asunto: Horario de exámenes de enero",
+    cuerpo: "Hola,\nya está publicado el calendario de exámenes en el aula virtual, en la sección «Secretaría». No hace falta responder a este correo.\nUn saludo.", fraude: false,
+    pistas: [], nota: "Sin enlace, sin urgencia, sin petición de datos y canal habitual." },
+  { canal: "SMS", meta: "De: +34 6XX XXX 101",
+    cuerpo: "Correos-Express: su paquete está retenido por falta de pago de 1,99 €. Regularice en 24 h en http://correos-envios-pago.example o será devuelto.", fraude: true,
+    pistas: [{ t: "retenido por falta de pago", m: "urgencia y amenaza" }, { t: "24 h", m: "plazo que presiona" }, { t: "http://correos-envios-pago.example", m: "dominio que imita a la empresa" }, { t: "1,99 €", m: "importe pequeño para que no pienses" }] },
+  { canal: "Chat", meta: "Grupo «Clase 2.º B» · mensaje de un número desconocido",
+    cuerpo: "Hola, soy Marta, me cambié de número. ¿Me pasas el código que te acaba de llegar por SMS? Es para recuperar mi cuenta, luego te explico.", fraude: true,
+    pistas: [{ t: "me cambié de número", m: "identidad sin verificar" }, { t: "código que te acaba de llegar por SMS", m: "petición de un código de verificación" }, { t: "luego te explico", m: "evita que lo compruebes" }] },
+  { canal: "Correo", meta: "De: biblioteca@campus-ejemplo.edu · Asunto: Recordatorio de devolución",
+    cuerpo: "El préstamo del libro «Redes de computadores» vence el viernes. Puedes renovarlo desde tu cuenta de la biblioteca o en el mostrador.", fraude: false,
+    pistas: [], nota: "Recordatorio habitual, sin enlace y con vía conocida para actuar." },
+  { canal: "Correo", meta: "De: soporte-ti@campus-ejemplo-seguridad.example · Asunto: ACCIÓN REQUERIDA: su cuenta será suspendida",
+    cuerpo: "Hemos detectado accesos sospechosos. Confirme su contraseña en el siguiente formulario en las próximas 2 horas para evitar la suspensión de su cuenta: Verificar ahora", fraude: true,
+    pistas: [{ t: "Confirme su contraseña", m: "nadie legítimo pide la contraseña" }, { t: "2 horas", m: "plazo que presiona" }, { t: "Verificar ahora", m: "enlace que no esperabas" }, { t: "accesos sospechosos", m: "miedo para que actúes sin pensar" }], notaMeta: "El remitente usa campus-ejemplo-seguridad.example: parecido pero distinto." },
+  { canal: "Chat", meta: "Mensaje de la delegada de clase (contacto guardado)",
+    cuerpo: "Recordad que mañana la práctica de laboratorio empieza a las 9:00 en el aula 2.1. Traed el guion impreso.", fraude: false,
+    pistas: [], nota: "Contacto conocido, canal habitual y sin petición de datos ni enlaces." }
+];
+let i = 0, revelado = false;
+const meta = document.querySelector("#meta"), cuerpo = document.querySelector("#cuerpo"), veredicto = document.querySelector("#veredicto");
+const mensaje = document.querySelector("#mensaje"), pistas = document.querySelector("#pistas"), estado = document.querySelector("#estado");
+const progreso = document.querySelector("#progreso"), resumen = document.querySelector("#resumen");
+const bRevelar = document.querySelector("#revelar"), bSiguiente = document.querySelector("#siguiente");
+
+function escapar(s) { return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function pintar() {
+  const m = MENSAJES[i]; revelado = false;
+  progreso.textContent = `Mensaje ${i + 1} de ${MENSAJES.length} · ${m.canal}`;
+  meta.textContent = m.meta; cuerpo.textContent = m.cuerpo;
+  veredicto.textContent = ""; mensaje.className = "mensaje";
+  pistas.innerHTML = '<li class="sub">Se muestran al revelar.</li>';
+  bRevelar.disabled = false; bSiguiente.disabled = true;
+  resumen.classList.remove("visible");
+  estado.textContent = "Votad: ¿legítimo o fraude?";
+}
+function revelar() {
+  if (revelado) return;
+  revelado = true;
+  const m = MENSAJES[i];
+  let html = escapar(m.cuerpo);
+  m.pistas.forEach((p) => { html = html.replace(escapar(p.t), `<mark class="pista">${escapar(p.t)}</mark>`); });
+  cuerpo.innerHTML = html;
+  mensaje.classList.add("revelado", m.fraude ? "fraude" : "legitimo");
+  veredicto.textContent = m.fraude ? "FRAUDE" : "LEGÍTIMO";
+  veredicto.className = "veredicto " + (m.fraude ? "mal" : "ok");
+  const items = m.fraude ? m.pistas.map((p) => `<li><strong>${escapar(p.t)}</strong>: ${escapar(p.m)}</li>`) : [`<li>${escapar(m.nota)}</li>`];
+  if (m.notaMeta) items.push(`<li>${escapar(m.notaMeta)}</li>`);
+  pistas.innerHTML = items.join("");
+  bRevelar.disabled = true; bSiguiente.disabled = false;
+  if (i === MENSAJES.length - 1) { resumen.classList.add("visible"); bSiguiente.disabled = true; estado.textContent = "Fin: cinco pistas resumidas a la derecha."; }
+  else estado.textContent = "Pulsa «Siguiente» para el próximo mensaje.";
+}
+bRevelar.addEventListener("click", revelar);
+bSiguiente.addEventListener("click", () => { if (i < MENSAJES.length - 1) { i++; pintar(); } });
+document.querySelector("#reiniciar").addEventListener("click", () => { i = 0; pintar(); });
+pintar();
+document.body.dataset.ready = "1";
+if (window.opener) { try { window.opener.postMessage({ demo: document.body.dataset.demo }, "*"); } catch (e) { /* sin índice abierto */ } }
+</script>
+</body>
+</html>

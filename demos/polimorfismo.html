@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Polimorfismo y hashes · Ciberdelito 3.0</title>
+<link rel="stylesheet" href="comun.css">
+<style>
+  .detectores { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .detector { background: #fff; border: 1px solid var(--regla); padding: 14px; }
+  .detector strong { display: block; font-size: 1.05rem; }
+  .detector .veredicto { font-size: 1.4rem; font-weight: 900; }
+  .contadores { display: flex; gap: 24px; margin-top: 12px; }
+  .contadores div { font-size: .85rem; color: var(--tinta2); }
+  .contadores b { display: block; font-size: 1.6rem; color: var(--tinta); }
+  .hash { word-break: break-all; }
+  .reglas li.si::before { content: "✓ "; color: #1F6F3F; font-weight: 900; }
+  .reglas li.no::before { content: "✗ "; color: var(--rojo); font-weight: 900; }
+</style>
+</head>
+<body data-demo="polimorfismo">
+<div class="contenedor">
+  <div class="aviso">Simulación local con datos ficticios · El pseudocódigo nunca se ejecuta; solo se transforma como texto</div>
+  <header class="cabecera">
+    <div><h1 class="titulo">Misma intención, <em>otra apariencia</em></h1><p class="sub">Cada variante describe lo mismo: marcar cuatro tarjetas. El hash cambia; la secuencia de acciones no.</p></div>
+  </header>
+  <div class="fila">
+    <section class="panel">
+      <span class="etiqueta">Pseudocódigo inocuo</span>
+      <pre class="mono" id="codigo" aria-live="polite"></pre>
+      <p class="sub">SHA-256 real calculado en el navegador:</p>
+      <p class="mono hash" id="hash"></p>
+      <div class="acciones">
+        <button class="boton rojo" id="variar">Nueva variante</button>
+        <button class="boton fantasma" id="reiniciar">Reiniciar</button>
+      </div>
+      <p id="estado" aria-live="polite"></p>
+    </section>
+    <aside class="panel">
+      <span class="etiqueta rojo">Dos detectores</span>
+      <div class="detectores">
+        <div class="detector"><strong>Firma exacta</strong><span class="sub">¿Coincide el hash con el original?</span><div class="veredicto" id="v-firma"></div></div>
+        <div class="detector"><strong>Comportamiento</strong><span class="sub">¿Se cumplen las tres reglas?</span><div class="veredicto" id="v-comp"></div>
+          <ul class="reglas" id="reglas" style="padding-left:0;list-style:none;margin:8px 0 0;font-size:.85rem">
+            <li data-regla="recorre">recorre todos los elementos</li>
+            <li data-regla="cambia">cambia su estado</li>
+            <li data-regla="bucle">lo hace en bucle</li>
+          </ul>
+        </div>
+      </div>
+      <div class="contadores">
+        <div><b id="c-variantes">0</b>variantes</div>
+        <div><b id="c-firma">0</b>aciertos firma</div>
+        <div><b id="c-comp">0</b>aciertos comportamiento</div>
+      </div>
+      <p class="sub" style="margin-top:12px">Una firma sigue siendo útil, pero comportamiento, contexto y permisos añaden capas.</p>
+    </aside>
+  </div>
+</div>
+<script>
+"use strict";
+const ORIGINAL = `para cada tarjeta en panel:
+    tarjeta.estado = "bloqueada"
+    registrar("estado cambiado")
+repetir hasta que no queden tarjetas`;
+
+// Transformaciones cosméticas: renombrar identificadores, comentarios, espacios y
+// reordenar las dos líneas independientes del cuerpo. No cambian el significado.
+const NOMBRES = [["tarjeta", "elemento"], ["tarjeta", "item"], ["panel", "vista"], ["panel", "lista"], ["registrar", "anotar"], ["registrar", "log"]];
+const COMENTARIOS = ["# paso de marcado", "# recorrido", "# actualizar vista", "# v2", "# sin cambios"];
+let semilla = 1;
+function azar(n) { semilla = (semilla * 48271) % 2147483647; return semilla % n; }
+function variar(texto) {
+  let lineas = texto.split("\n");
+  const [de, a] = NOMBRES[azar(NOMBRES.length)];
+  lineas = lineas.map((l) => l.replaceAll(de, a));
+  if (azar(2)) [lineas[1], lineas[2]] = [lineas[2], lineas[1]];
+  if (azar(2)) lineas.splice(azar(lineas.length + 1), 0, COMENTARIOS[azar(COMENTARIOS.length)]);
+  if (azar(2)) lineas = lineas.map((l) => l.replace(/^    /, "  "));
+  return lineas.join("\n");
+}
+async function sha256(texto) {
+  if (!(globalThis.crypto && crypto.subtle)) return null;
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(texto));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function evaluarComportamiento(texto) {
+  const t = texto.toLowerCase();
+  return {
+    recorre: /para cada|recorrer|todos|cada/.test(t),
+    cambia: /estado\s*=|marcar|bloquead/.test(t),
+    bucle: /repetir|mientras|para cada|hasta/.test(t)
+  };
+}
+const elCodigo = document.querySelector("#codigo"), elHash = document.querySelector("#hash"), estado = document.querySelector("#estado");
+const vFirma = document.querySelector("#v-firma"), vComp = document.querySelector("#v-comp");
+const cVar = document.querySelector("#c-variantes"), cFirma = document.querySelector("#c-firma"), cComp = document.querySelector("#c-comp");
+let hashOriginal = null, variantes = 0, aciertosFirma = 0, aciertosComp = 0;
+
+async function mostrar(texto, esOriginal) {
+  elCodigo.textContent = texto;
+  const h = await sha256(texto);
+  elHash.textContent = h ?? "Este navegador no ofrece crypto.subtle en file://; abre la demo con otro navegador.";
+  if (esOriginal) hashOriginal = h;
+  const firma = h !== null && h === hashOriginal;
+  vFirma.textContent = firma ? "Coincide" : "No coincide";
+  vFirma.className = "veredicto " + (firma ? "ok" : "mal");
+  const r = evaluarComportamiento(texto);
+  document.querySelectorAll("#reglas li").forEach((li) => li.className = r[li.dataset.regla] ? "si" : "no");
+  const comp = r.recorre && r.cambia && r.bucle;
+  vComp.textContent = comp ? "Detectada" : "No detectada";
+  vComp.className = "veredicto " + (comp ? "ok" : "mal");
+  if (!esOriginal) { variantes++; if (firma) aciertosFirma++; if (comp) aciertosComp++; }
+  cVar.textContent = variantes; cFirma.textContent = aciertosFirma; cComp.textContent = aciertosComp;
+  estado.textContent = esOriginal ? "Variante original." : `Variante ${variantes}: la firma ${firma ? "acierta" : "falla"}; el comportamiento ${comp ? "acierta" : "falla"}.`;
+}
+document.querySelector("#variar").addEventListener("click", () => mostrar(variar(ORIGINAL), false));
+document.querySelector("#reiniciar").addEventListener("click", () => { semilla = 1; variantes = aciertosFirma = aciertosComp = 0; mostrar(ORIGINAL, true); });
+mostrar(ORIGINAL, true).then(() => { document.body.dataset.ready = "1"; if (window.opener) { try { window.opener.postMessage({ demo: document.body.dataset.demo }, "*"); } catch (e) { /* sin índice abierto */ } } });
+</script>
+</body>
+</html>

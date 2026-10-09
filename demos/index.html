@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demos · Ciberdelito 3.0</title>
+<link rel="stylesheet" href="comun.css">
+<style>
+  .lista { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+  .demo { display: block; padding: 18px 20px; background: var(--suave); color: inherit; text-decoration: none; border-left: 6px solid var(--tinta); }
+  .demo:hover, .demo:focus-visible { border-left-color: var(--rojo); }
+  .demo strong { display: block; font-size: 1.25rem; }
+  .demo span { color: var(--tinta2); }
+  .demo .luz { float: right; font-weight: 800; color: var(--tinta2); }
+  .demo.vista .luz { color: #1F6F3F; }
+</style>
+</head>
+<body data-demo="index">
+<div class="contenedor">
+  <div class="aviso">Simulación local con datos ficticios · Sin Internet · Nada sale del navegador</div>
+  <header class="cabecera">
+    <div><h1 class="titulo">Demos <em>de aula</em></h1><p class="sub">Abre cada demo una vez antes de la charla. Cada una se abre en una pestaña nueva y avisa a esta cuando ha cargado.</p></div>
+    <button class="boton fantasma" id="reiniciar">Reiniciar</button>
+  </header>
+  <nav class="lista" aria-label="Demos">
+    <a class="demo" target="_blank" href="ransomware.html" data-k="ransomware"><span class="luz">pendiente</span><strong>1 · Laboratorio de ransomware</strong><span>2:30 · fases, aislar y recuperar</span></a>
+    <a class="demo" target="_blank" href="phishing.html" data-k="phishing"><span class="luz">pendiente</span><strong>2 · ¿Legítimo o fraude?</strong><span>Seis mensajes ficticios para votar</span></a>
+    <a class="demo" target="_blank" href="polimorfismo.html" data-k="polimorfismo"><span class="luz">pendiente</span><strong>3 · Polimorfismo y hashes</strong><span>Firma exacta frente a comportamiento</span></a>
+    <a class="demo" target="_blank" href="inyeccion.html" data-k="inyeccion"><span class="luz">pendiente</span><strong>4 · Inyección de prompt</strong><span>Agente simulado con y sin guardarraíles</span></a>
+    <a class="demo" target="_blank" href="defensa.html" data-k="defensa"><span class="luz">pendiente</span><strong>5 · Tres fichas para defender el campus</strong><span>3:30 · matriz de cobertura</span></a>
+  </nav>
+  <p id="estado" aria-live="polite"></p>
+</div>
+<script>
+"use strict";
+// Cada demo se abre en una pestaña nueva y, al terminar de cargar, envía un mensaje
+// a esta pestaña (window.opener.postMessage). La luz «cargada» solo se enciende con ese aviso.
+const enlaces = [...document.querySelectorAll(".demo")];
+const estado = document.querySelector("#estado");
+function luz(k, texto, clase) { const a = enlaces.find((e) => e.dataset.k === k); if (!a) return; a.classList.toggle("vista", clase); a.querySelector(".luz").textContent = texto; actualizar(); }
+enlaces.forEach((a) => a.addEventListener("click", () => { if (!a.classList.contains("vista")) luz(a.dataset.k, "abierta…", false); }));
+window.addEventListener("message", (e) => { if (e.data && typeof e.data.demo === "string") luz(e.data.demo, "cargada", true); });
+document.querySelector("#reiniciar").addEventListener("click", () => { enlaces.forEach((a) => luz(a.dataset.k, "pendiente", false)); });
+function actualizar() { const n = enlaces.filter((a) => a.classList.contains("vista")).length; estado.textContent = n === enlaces.length ? "Las cinco demos han cargado." : `${n} de ${enlaces.length} demos cargadas.`; }
+actualizar();
+document.body.dataset.ready = "1";
+</script>
+</body>
+</html>

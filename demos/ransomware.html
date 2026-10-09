@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laboratorio de ransomware · Ciberdelito 3.0</title>
+<link rel="stylesheet" href="comun.css">
+<style>
+  .archivos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 12px; margin: 14px 0; }
+  .archivo { position: relative; min-width: 0; padding: 16px; background: #fff; border: 1px solid var(--regla); min-height: 92px; }
+  .archivo strong { display: block; font-size: 1.05rem; overflow-wrap: anywhere; }
+  .archivo .estado-archivo { display: block; color: var(--tinta2); font-size: .85rem; padding-right: 96px; }
+  .archivo.bloqueado { border-color: var(--rojo); }
+  .archivo.bloqueado .estado-archivo { color: var(--rojo); font-weight: 800; }
+  .archivo.bloqueado::after { content: "BLOQUEADO"; position: absolute; right: 10px; bottom: 12px; font-size: .65rem; font-weight: 900; color: var(--papel); background: var(--rojo); padding: 2px 8px; }
+  .fases { display: grid; gap: 8px; margin: 12px 0; }
+  .fase { display: flex; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--regla); background: #fff; color: var(--tinta2); }
+  .fase b { width: 32px; height: 32px; display: grid; place-items: center; background: var(--suave); color: var(--tinta2); font-weight: 900; }
+  .fase.activa { color: var(--tinta); border-color: var(--tinta); }
+  .fase.activa b { background: var(--tinta); color: var(--papel); }
+  .fase.hecha b { background: var(--rojo); color: var(--papel); }
+  .nota-rescate { margin: 12px 0 0; padding: 14px 16px; border: 2px solid var(--rojo); background: #fff; }
+</style>
+</head>
+<body data-demo="ransomware">
+<div class="contenedor">
+  <div class="aviso">Simulación local con datos ficticios · No lee, cifra, sube ni modifica ningún archivo</div>
+  <header class="cabecera">
+    <div><h1 class="titulo">Laboratorio de <em>ransomware</em></h1><p class="sub">Un escritorio que solo existe en esta pestaña. La pantalla de rescate es el último acto de una cadena.</p></div>
+  </header>
+  <div class="fila">
+    <section class="panel" aria-labelledby="t-escritorio">
+      <span class="etiqueta">Archivos ficticios</span>
+      <h2 id="t-escritorio" style="margin:4px 0 0">Escritorio del alumnado</h2>
+      <div class="acciones" style="margin:10px 0 0">
+        <button class="boton rojo" id="simular">Simular incidente</button>
+        <button class="boton" id="siguiente-fase" disabled>Siguiente fase</button>
+        <button class="boton" id="aislar" disabled>Aislar</button>
+        <button class="boton" id="recuperar" disabled>Recuperar copia</button>
+        <button class="boton fantasma" id="reiniciar">Reiniciar</button>
+      </div>
+      <p id="estado" aria-live="polite">Pulsa «Simular incidente» para recorrer las fases.</p>
+      <div class="archivos" id="archivos">
+        <div class="archivo"><strong>practica_final.pdf</strong><span class="estado-archivo">Disponible</span></div>
+        <div class="archivo"><strong>notas_clase.ods</strong><span class="estado-archivo">Disponible</span></div>
+        <div class="archivo"><strong>foto_equipo.jpg</strong><span class="estado-archivo">Disponible</span></div>
+        <div class="archivo"><strong>proyecto_robot.zip</strong><span class="estado-archivo">Disponible</span></div>
+      </div>
+      <div class="nota-rescate oculto" id="nota"><strong>SIMULACIÓN: acceso bloqueado.</strong> En un incidente real, a estas alturas pueden haberse copiado datos y atacado las copias. Aquí no ha salido nada del navegador.</div>
+    </section>
+    <aside class="panel" aria-labelledby="t-fases">
+      <span class="etiqueta rojo">Secuencia</span>
+      <h2 id="t-fases" style="margin:4px 0 0">La pantalla es el último acto</h2>
+      <div class="fases" id="fases">
+        <div class="fase"><b>1</b><span>Acceso inicial: una cuenta ficticia comprometida</span></div>
+        <div class="fase"><b>2</b><span>Descubrimiento y control: permisos en aumento</span></div>
+        <div class="fase"><b>3</b><span>Copia ficticia de datos (nada sale de la pestaña)</span></div>
+        <div class="fase"><b>4</b><span>Bloqueo visual de los archivos</span></div>
+        <div class="fase"><b>5</b><span>Presión: la parte visible del incidente</span></div>
+      </div>
+      <p class="sub">Las fases avanzan solas cada 8 segundos; «Siguiente fase» adelanta a mano. «Aislar» detiene la secuencia en la fase en que esté. «Recuperar» solo se activa después de aislar.</p>
+    </aside>
+  </div>
+</div>
+<script>
+"use strict";
+const archivos = [...document.querySelectorAll(".archivo")];
+const fases = [...document.querySelectorAll(".fase")];
+const nota = document.querySelector("#nota");
+const estado = document.querySelector("#estado");
+const bSimular = document.querySelector("#simular");
+const bAislar = document.querySelector("#aislar");
+const bRecuperar = document.querySelector("#recuperar");
+const bReiniciar = document.querySelector("#reiniciar");
+const bSiguiente = document.querySelector("#siguiente-fase");
+const PASO_MS = 8000;
+const mensajes = [
+  "Fase 1: una cuenta ficticia ha sido comprometida.",
+  "Fase 2: descubrimiento y aumento de permisos.",
+  "Fase 3: se representa una copia de datos; nada abandona esta pestaña.",
+  "Fase 4: los archivos cambian a «no disponible».",
+  "Fase 5: aparece la presión. Ya puedes aislar."
+];
+let temporizadores = [];
+let faseActual = -1;
+let aislado = false;
+
+function limpiarTemporizadores() { temporizadores.forEach(clearTimeout); temporizadores = []; }
+function pintarFases() {
+  fases.forEach((f, i) => { f.classList.toggle("hecha", i < faseActual); f.classList.toggle("activa", i === faseActual); });
+}
+function reiniciar(mensaje = "Pulsa «Simular incidente» para recorrer las fases.") {
+  limpiarTemporizadores();
+  faseActual = -1; aislado = false; pintarFases();
+  archivos.forEach((a) => { a.classList.remove("bloqueado"); a.querySelector(".estado-archivo").textContent = "Disponible"; });
+  nota.classList.add("oculto");
+  bSimular.disabled = false; bAislar.disabled = true; bRecuperar.disabled = true; bSiguiente.disabled = true;
+  estado.textContent = mensaje;
+}
+function programar() { limpiarTemporizadores(); if (faseActual < mensajes.length - 1) temporizadores.push(setTimeout(avanzar, PASO_MS)); }
+function avanzar() {
+  if (faseActual >= mensajes.length - 1) return;
+  irAFase(faseActual + 1);
+  if (faseActual === mensajes.length - 1) { bSiguiente.disabled = true; limpiarTemporizadores(); } else programar();
+}
+function irAFase(i) {
+  faseActual = i; pintarFases(); estado.textContent = mensajes[i];
+  if (i === 3) archivos.forEach((a) => { a.classList.add("bloqueado"); a.querySelector(".estado-archivo").textContent = "No disponible"; });
+  if (i === 4) nota.classList.remove("oculto");
+}
+bSimular.addEventListener("click", () => {
+  reiniciar("Simulación en curso…");
+  bSimular.disabled = true; bAislar.disabled = false; bSiguiente.disabled = false;
+  temporizadores.push(setTimeout(avanzar, 600));
+});
+bSiguiente.addEventListener("click", avanzar);
+bAislar.addEventListener("click", () => {
+  limpiarTemporizadores(); aislado = true;
+  bAislar.disabled = true; bRecuperar.disabled = false; bSiguiente.disabled = true;
+  fases.forEach((f) => f.classList.remove("activa"));
+  estado.textContent = `Contención simulada en la fase ${Math.max(faseActual + 1, 1)}: se activa el plan y se preserva evidencia.`;
+});
+bRecuperar.addEventListener("click", () => {
+  if (!aislado) return;
+  reiniciar("Copia simulada restaurada después de contener y validar el entorno.");
+});
+bReiniciar.addEventListener("click", () => reiniciar());
+reiniciar();
+document.body.dataset.ready = "1";
+if (window.opener) { try { window.opener.postMessage({ demo: document.body.dataset.demo }, "*"); } catch (e) { /* sin índice abierto */ } }
+</script>
+</body>
+</html>
