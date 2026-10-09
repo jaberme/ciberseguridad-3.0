@@ -6,4 +6,4 @@ Material público de la charla «Ciberdelito 3.0: del virus artesanal al ataque 
 - `demos/`: cinco demos locales con datos ficticios. No leen ni escriben archivos, no usan red ni almacenamiento.
 - `main.pdf`: presentación. Pide contraseña para abrirse; se facilita durante la charla.
 
-Página publicada: https://jaberme.github.io/ciberseguridad-3.0/
+Página publicada: https://cafe.ual.es/ciberseguridad-3.0/
