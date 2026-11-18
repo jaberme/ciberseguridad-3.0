@@ -4,6 +4,6 @@ Material público de la charla «Ciberdelito 3.0: del virus artesanal al ataque 
 
 - `index.html`: página para asistentes, con la guía de la charla, las demos y la presentación.
 - `demos/`: cinco demos locales con datos ficticios. No leen ni escriben archivos, no usan red ni almacenamiento.
-- `main.pdf`: presentación. Pide contraseña para abrirse; se facilita durante la charla.
+- `main.pdf`: presentación (edición XXIII Jornadas SLCENT, IES Al-Ándalus, 19 de noviembre de 2026). Se abre sin contraseña.
 
 Página publicada: https://cafe.ual.es/ciberseguridad-3.0/
